@@ -942,11 +942,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Basemap Source Indicator Badge */}
-              <div style={{ position: 'absolute', top: '70px', left: '14px', zIndex: 400, background: 'rgba(255, 255, 255, 0.95)', border: '1px solid var(--border-light)', borderRadius: 6, padding: '4px 8px', fontSize: '0.68rem', color: 'var(--text-muted)', boxShadow: 'var(--shadow-sm)' }}>
-                Tile Provider: <b style={{ color: 'var(--text-primary)' }}>{hasCartoKey ? 'CARTO Positron Light' : 'OpenStreetMap Standard'}</b> (No Watermark)
-              </div>
-
               {/* Geographic Approximation Disclosure Badge (Mumbai Default) */}
               {activeDataset.isDefault && (
                 <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 400, background: 'rgba(255, 255, 255, 0.95)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '6px 12px', fontSize: '0.7rem', color: 'var(--text-muted)', boxShadow: 'var(--shadow-floating)', maxWidth: 300, lineHeight: 1.35 }}>
