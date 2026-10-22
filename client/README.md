@@ -2,7 +2,7 @@
 
 ### *A data-driven urban safety and city intelligence platform for exploring locality-level indicators, visualizing geographic patterns, and evaluating hypothetical infrastructure-planning scenarios.*
 
-[![Repository](https://img.shields.io/badge/Repository-citypulse--mumbai-168BFF.svg)](https://github.com/JaivalKatira/women-safety-map---mumbai-v1.git)
+[![Repository](https://img.shields.io/badge/Repository-citypulse--mumbai-168BFF.svg)](https://github.com/SurajMahto006/citypulse-mumbai.git)
 [![Category](https://img.shields.io/badge/Category-Civic%20Tech%20%7C%20Urban%20Analytics-20B879.svg)]()
 [![Status](https://img.shields.io/badge/Build-Passing%20(900ms)-10b981.svg)]()
 [![Linter](https://img.shields.io/badge/Linter-0%20warnings%20(oxlint)-38bdf8.svg)]()

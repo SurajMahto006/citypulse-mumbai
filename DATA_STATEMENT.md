@@ -1,6 +1,6 @@
 # CityPulse Mumbai: Data Statement & Provenance Specification
 
-**Repository:** `citypulse-mumbai` (`https://github.com/JaivalKatira/women-safety-map---mumbai-v1.git`)  
+**Repository:** `citypulse-mumbai` (`https://github.com/SurajMahto006/citypulse-mumbai.git`)  
 **Project Category:** Civic Technology, Urban Analytics, and Data Science  
 **Description:** A data-driven urban safety and city intelligence platform for exploring locality-level indicators, visualizing geographic patterns, and evaluating hypothetical infrastructure-planning scenarios.  
 **Document Version:** 2.3 (General Urban Safety & City Intelligence Aligned)  
