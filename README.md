@@ -149,11 +149,11 @@ citypulse-mumbai/
 │   ├── vite.config.js                    # Vite bundler configuration
 │   ├── .oxlintrc.json                    # Oxlint linter rules
 │   ├── README.md                         # Frontend-specific documentation
+│   ├── vercel.json                       # Vercel deployment configuration & SPA rewrites
 │   └── package.json                      # Frontend dependencies and build scripts
 ├── data_pipeline.py                      # Data validation, OLS decomposition & curated JSON exporter
 ├── mumbai_urban_safety.csv               # Raw benchmark dataset (538 localities)
 ├── citypulse_mumbai_cleaned.csv          # Cleaned benchmark dataset with engineered metrics
-├── vercel.json                           # Vercel deployment configuration & SPA rewrites
 ├── DATA_STATEMENT.md                     # Data provenance, licensing, dictionary & bias disclosures
 ├── ANALYSIS_REPORT.md                    # Methodology, mathematical proofs & benchmark report
 ├── PRESENTATION_PITCH.md                 # 5-min finalist presentation script & 3-min Q&A defense

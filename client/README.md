@@ -40,6 +40,7 @@ client/
 │   └── main.jsx                    # React 19 entry point
 ├── index.html                      # HTML5 template with Leaflet & font imports
 ├── vite.config.js                  # Vite configuration with React plugin
+├── vercel.json                     # Vercel deployment configuration & SPA rewrites
 ├── .oxlintrc.json                  # Oxlint configuration (0 errors, 0 warnings)
 └── package.json
 ```
