@@ -849,3 +849,357 @@ input[type="range"] {
   }
 }
 
+/* ── Enhanced Modern Map UI / UX ── */
+
+.cockpit-layout.expanded-map {
+  grid-template-columns: 1fr !important;
+  position: relative;
+}
+
+.cockpit-layout.expanded-map .dossier-panel.floating-dossier {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: 410px;
+  max-width: 90vw;
+  z-index: 650;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(14px);
+}
+
+.map-wrapper.dark-basemap .leaflet-tile-pane {
+  filter: brightness(0.68) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35);
+}
+
+.map-wrapper.dark-basemap {
+  background: #0B1120;
+}
+
+/* Floating Map Controls Toolbar */
+.map-floating-controls {
+  position: absolute;
+  top: 130px;
+  right: 14px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+@media (max-width: 820px) {
+  .map-floating-controls {
+    top: auto;
+    bottom: 90px;
+    right: 14px;
+    left: 14px;
+    justify-content: center;
+  }
+}
+
+.map-toolbar-group {
+  display: flex;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow: var(--shadow-floating);
+  gap: 2px;
+}
+
+.map-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-floating);
+  transition: all 0.15s ease;
+}
+
+.map-toolbar-group .map-tool-btn {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.map-toolbar-group .map-tool-btn:hover {
+  color: var(--text-primary);
+  background: #F1F5F9;
+}
+
+.map-toolbar-group .map-tool-btn.active {
+  background: #168BFF;
+  color: #FFFFFF;
+}
+
+.map-tool-btn:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.map-tool-btn.active {
+  background: #E8F6FF;
+  border-color: #BAE6FD;
+  color: #168BFF;
+}
+
+/* Quick Hubs Bar */
+.quick-hubs-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: 6px;
+  border-top: 1px dashed #E2E8F0;
+  margin-top: 6px;
+}
+
+.quick-hubs-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+
+.quick-hub-btn {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quick-hub-btn:hover {
+  background: #EFF6FF;
+  border-color: #168BFF;
+  color: #168BFF;
+  transform: translateY(-1px);
+}
+
+/* Radar Beacon Ripple Animation */
+@keyframes beacon-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.map-beacon-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-beacon-ping {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #168BFF;
+  background: rgba(22, 139, 255, 0.22);
+  animation: beacon-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  box-sizing: border-box;
+}
+
+.map-beacon-ping.ping-high {
+  border-color: #FF7868;
+  background: rgba(255, 120, 104, 0.22);
+}
+
+/* Interactive Map Legend */
+.map-interactive-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: var(--shadow-floating);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+}
+
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.legend-hint {
+  font-size: 0.64rem;
+  color: #168BFF;
+  font-weight: 700;
+}
+
+.legend-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F8FAFC;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.legend-item-chip:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.legend-item-chip.active-tier {
+  background: #EFF6FF;
+  border-color: #168BFF;
+  color: #168BFF;
+  box-shadow: 0 0 0 1px #168BFF;
+}
+
+.legend-item-chip.active-stations {
+  background: #E8F6FF;
+  border-color: #168BFF;
+  color: #168BFF;
+}
+
+.legend-count {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: #64748B;
+}
+
+/* Map HUD Status Badge */
+.map-hud-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 58px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-floating);
+  pointer-events: none;
+}
+
+.hud-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #20B879;
+  display: inline-block;
+  animation: beacon 2s infinite;
+}
+
+/* Custom Card Popup */
+.custom-card-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border-light) !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16) !important;
+}
+
+.custom-card-popup .leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.map-popup-card {
+  padding: 14px 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.map-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.map-popup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid #E2E8F0;
+}
+
+.map-popup-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-lbl {
+  font-size: 0.65rem;
+  color: #64748B;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.stat-val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #1E293B;
+}
+
+

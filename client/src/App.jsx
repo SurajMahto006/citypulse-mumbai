@@ -5,7 +5,8 @@ import {
   MapPin, Info, BarChart3, Database, ChevronRight,
   Compass, Search, RefreshCw, Sparkles, Building2, ShieldAlert,
   Upload, FileText, Check, Eye, Download, X, HelpCircle,
-  Layers, ArrowDown, ArrowUp, ExternalLink, Zap, BookOpen
+  Layers, ArrowDown, ArrowUp, ExternalLink, Zap, BookOpen,
+  Maximize2, Minimize2, Sun, Moon, Globe, Target, Radio
 } from 'lucide-react';
 
 // ── Native, Zero-Dependency Data Parsers ──
@@ -241,12 +242,19 @@ export default function App() {
   const [uploadError, setUploadError] = useState('');
   const [uploadQuality, setUploadQuality] = useState(null);
 
-  // Map references
+  // Map references & Layer groups
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
   const markersLayerRef = useRef(null);
   const stationsLayerRef = useRef(null);
+  const selectionLayerRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Advanced Map UI Controls
+  const [mapMode, setMapMode] = useState('light'); // 'light' | 'dark' | 'satellite'
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [showCoverageRadius, setShowCoverageRadius] = useState(true);
 
   // Check CARTO API Key
   const cartoApiKey = import.meta.env.VITE_CARTO_API_KEY;
@@ -866,19 +874,115 @@ export default function App() {
 
       // Automatic fallback if CARTO key or tiles fail
       tileLayer.on('tileerror', function(error, tile) {
-        if (tileUrl.includes('cartocdn.com')) {
-          tile.src = `https://tile.openstreetmap.org/${error.coords.z}/${error.coords.x}/${error.coords.y}.png`;
-        }
+        tile.src = `https://tile.openstreetmap.org/${error.coords.z}/${error.coords.x}/${error.coords.y}.png`;
       });
 
       tileLayer.addTo(map);
+      tileLayerRef.current = tileLayer;
 
       markersLayerRef.current = L.layerGroup().addTo(map);
       stationsLayerRef.current = L.layerGroup().addTo(map);
+      selectionLayerRef.current = L.layerGroup().addTo(map);
 
       mapInstanceRef.current = map;
     }
   }, [loading, hasCartoKey, cartoApiKey]);
+
+  // 8B. Dynamic Basemap Switcher (Light / Dark / Satellite)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+
+    let tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let tileAttr = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors';
+    let subdomains = 'abc';
+    let maxZoom = 19;
+
+    if (mapMode === 'dark') {
+      tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png';
+      tileAttr = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>';
+      subdomains = 'abcd';
+    } else if (mapMode === 'satellite') {
+      tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      tileAttr = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and GIS Community';
+      subdomains = 'abc';
+      maxZoom = 18;
+    } else if (hasCartoKey) {
+      tileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=${cartoApiKey.trim()}`;
+      tileAttr = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>';
+      subdomains = 'abcd';
+    }
+
+    try {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    } catch (e) {
+      // ignore
+    }
+
+    const newTileLayer = L.tileLayer(tileUrl, {
+      attribution: tileAttr,
+      subdomains,
+      maxZoom
+    });
+
+    newTileLayer.on('tileerror', function(error, tile) {
+      tile.src = `https://tile.openstreetmap.org/${error.coords.z}/${error.coords.x}/${error.coords.y}.png`;
+    });
+
+    newTileLayer.addTo(mapInstanceRef.current);
+    tileLayerRef.current = newTileLayer;
+    newTileLayer.bringToBack();
+  }, [mapMode, hasCartoKey, cartoApiKey]);
+
+  // 8C. Fullscreen / Expanded Map Canvas Auto-Resize
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      const t1 = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 80);
+      const t2 = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 250);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [isMapExpanded]);
+
+  // 8D. Selected Locality Radar Beacon & 1.5km Catchment Buffer
+  useEffect(() => {
+    if (!mapInstanceRef.current || !selectionLayerRef.current) return;
+    selectionLayerRef.current.clearLayers();
+
+    if (!selectedLocality || selectedLocality.lat === null || selectedLocality.lon === null || isNaN(selectedLocality.lat) || isNaN(selectedLocality.lon)) {
+      return;
+    }
+
+    const { lat, lon, risk_tier, locality } = selectedLocality;
+    const tierColor = risk_tier === 'High' ? '#FF7868' : (risk_tier === 'Medium' ? '#F59E0B' : '#168BFF');
+
+    // 1. Municipal Response Catchment Buffer (1.5 km radius)
+    if (showCoverageRadius) {
+      const catchmentCircle = L.circle([lat, lon], {
+        radius: 1500,
+        color: tierColor,
+        dashArray: '6, 6',
+        weight: 2,
+        fillColor: tierColor,
+        fillOpacity: 0.12,
+        interactive: false
+      });
+      selectionLayerRef.current.addLayer(catchmentCircle);
+    }
+
+    // 2. Animated Radar Beacon Ping
+    const beaconIcon = L.divIcon({
+      className: 'map-beacon-marker',
+      html: `<div class="map-beacon-ping ${risk_tier === 'High' ? 'ping-high' : ''}"></div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+
+    const beaconMarker = L.marker([lat, lon], {
+      icon: beaconIcon,
+      interactive: false,
+      zIndexOffset: 1000
+    });
+    selectionLayerRef.current.addLayer(beaconMarker);
+  }, [selectedLocality, showCoverageRadius]);
 
   // 9. ResizeObserver and Tab Invalidate Size: ensures map never renders as grey/white blank
   useEffect(() => {
@@ -943,16 +1047,17 @@ export default function App() {
       if (loc.risk_tier === 'High') color = '#FF7868'; // Coral
       else if (loc.risk_tier === 'Medium') color = '#F59E0B'; // Amber
 
-      const radius = isSelected ? 12 : (loc.risk_tier === 'High' ? 8 : 6);
+      const radius = isSelected ? 12 : (loc.risk_tier === 'High' ? 8.5 : 6);
       const circle = L.circleMarker([loc.lat, loc.lon], {
         radius: radius,
         fillColor: color,
         color: isSelected ? '#168BFF' : '#FFFFFF',
         weight: isSelected ? 3.5 : 1.5,
         opacity: 1,
-        fillOpacity: isSelected ? 0.9 : 0.65
+        fillOpacity: isSelected ? 0.92 : 0.72
       });
 
+      // Quick hover tooltip
       circle.bindTooltip(`
         <div style="font-family:'Plus Jakarta Sans',sans-serif;padding:2px 4px;">
           <b style="color:#1E293B;">${loc.locality}</b> (${loc.ward || 'General'})<br/>
@@ -960,6 +1065,42 @@ export default function App() {
           ${loc.crimes_against_women !== undefined ? `Incidents: <b>${loc.crimes_against_women}</b> · Chowkis: <b>${loc.police_chowkis}</b>` : `Mapped Record`}
         </div>
       `, { sticky: true, className: 'custom-leaflet-tooltip' });
+
+      // Rich Card Popup on Click
+      const popupHtml = `
+        <div class="map-popup-card">
+          <div class="map-popup-header">
+            <span class="badge ${loc.risk_tier === 'High' ? 'badge-red' : (loc.risk_tier === 'Medium' ? 'badge-amber' : 'badge-emerald')}">
+              ${loc.risk_tier === 'Low' ? 'Lower Priority (P3)' : `${loc.risk_tier} Priority (P${loc.risk_tier === 'High' ? '1' : '2'})`}
+            </span>
+            <span style="font-size: 0.72rem; color: #64748B; font-weight: 700;">${loc.zone || 'Mumbai'}</span>
+          </div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: #1E293B; margin-top: 4px;">${loc.locality}</div>
+          <div style="font-size: 0.75rem; color: #64748B;">Ward / Zone: <b>${loc.ward || 'General'}</b></div>
+          <div class="map-popup-grid">
+            <div class="map-popup-stat">
+              <span class="stat-lbl">Priority Score</span>
+              <span class="stat-val" style="color: ${color}">${Number(loc.risk_index).toFixed(1)} <small>/20</small></span>
+            </div>
+            <div class="map-popup-stat">
+              <span class="stat-lbl">Nearest Police</span>
+              <span class="stat-val">${loc.distance_to_police_km !== undefined ? `${loc.distance_to_police_km} km` : (loc.police_chowkis !== undefined ? `${loc.police_chowkis} posts` : '—')}</span>
+            </div>
+            <div class="map-popup-stat">
+              <span class="stat-lbl">Pop. Density</span>
+              <span class="stat-val">${loc.population_density !== undefined ? `${Number(loc.population_density).toLocaleString()}/km²` : '—'}</span>
+            </div>
+            <div class="map-popup-stat">
+              <span class="stat-lbl">Light Deficit</span>
+              <span class="stat-val">${loc.lighting_deficit_score !== undefined ? `${loc.lighting_deficit_score}%` : '—'}</span>
+            </div>
+          </div>
+          <div style="font-size: 0.7rem; color: #168BFF; font-weight: 700; margin-top: 6px; text-align: center;">
+            ✓ Loaded in Dossier &amp; Simulator
+          </div>
+        </div>
+      `;
+      circle.bindPopup(popupHtml, { maxWidth: 260, className: 'custom-card-popup' });
 
       circle.on('click', () => {
         setSelectedLocality(loc);
@@ -969,7 +1110,6 @@ export default function App() {
     });
 
     // Smart Camera/Bounds adjustment:
-    // If active search or specific zone filter is applied and has valid pins, focus them!
     const isFiltered = searchQuery.trim().length > 0 || zoneFilter !== 'all' || tierFilter !== 'all';
     if (isFiltered && validCoordsList.length > 0) {
       if (validCoordsList.length === 1) {
@@ -978,9 +1118,6 @@ export default function App() {
         const bounds = L.latLngBounds(validCoordsList.map(l => [l.lat, l.lon]));
         mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 14, animate: true });
       }
-    } else if (!isFiltered && activeDataset.isDefault) {
-      // Default overview of Greater Mumbai
-      // mapInstanceRef.current.setView([19.0800, 72.8700], 11);
     } else if (selectedLocality && selectedLocality.lat !== null && selectedLocality.lon !== null) {
       mapInstanceRef.current.setView([selectedLocality.lat, selectedLocality.lon], 13, { animate: true });
     }
@@ -1329,10 +1466,10 @@ export default function App() {
             VIEW 1: EXECUTIVE COCKPIT & MAP
         ───────────────────────────────────────────────────────────── */}
         {activeTab === 'cockpit' && (
-          <div className="cockpit-layout">
+          <div className={`cockpit-layout ${isMapExpanded ? 'expanded-map' : ''}`}>
             
             {/* Interactive Leaflet Map Box */}
-            <div className="map-wrapper glass-panel">
+            <div className={`map-wrapper glass-panel ${mapMode === 'dark' ? 'dark-basemap' : ''}`}>
               {/* Floating Filter Controls */}
               <div className="map-filter-bar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', flexWrap: 'wrap' }}>
@@ -1452,7 +1589,101 @@ export default function App() {
                     </>
                   )}
                 </div>
+
+                {/* Quick Hubs Bar for 1-Click Navigation */}
+                {activeDataset.hasCoordinates && activeDataset.isDefault && (
+                  <div className="quick-hubs-bar">
+                    <span className="quick-hubs-label">📍 Quick Jump:</span>
+                    {['Andheri', 'Bandra', 'Kurla', 'Dharavi', 'Colaba', 'Borivali', 'Dadar', 'Chembur', 'Worli', 'Ghatkopar'].map(hub => (
+                      <button
+                        key={hub}
+                        type="button"
+                        className="quick-hub-btn"
+                        onClick={() => {
+                          const found = activeDataset.records.find(r => r.locality && r.locality.toLowerCase().includes(hub.toLowerCase()));
+                          if (found) {
+                            setSelectedLocality(found);
+                            if (mapInstanceRef.current && found.lat && found.lon) {
+                              mapInstanceRef.current.flyTo([found.lat, found.lon], 13.5, { duration: 0.8 });
+                            }
+                          }
+                        }}
+                        title={`Focus map on ${hub}`}
+                      >
+                        {hub}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Top Floating Map Action Toolbar */}
+              {activeDataset.hasCoordinates && (
+                <div className="map-floating-controls">
+                  {/* Basemap switcher */}
+                  <div className="map-toolbar-group" title="Select Basemap Style">
+                    <button
+                      type="button"
+                      className={`map-tool-btn ${mapMode === 'light' ? 'active' : ''}`}
+                      onClick={() => setMapMode('light')}
+                      title="Light Street Map"
+                    >
+                      <Sun size={12} /> Light
+                    </button>
+                    <button
+                      type="button"
+                      className={`map-tool-btn ${mapMode === 'dark' ? 'active' : ''}`}
+                      onClick={() => setMapMode('dark')}
+                      title="Dark Midnight Mode"
+                    >
+                      <Moon size={12} /> Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={`map-tool-btn ${mapMode === 'satellite' ? 'active' : ''}`}
+                      onClick={() => setMapMode('satellite')}
+                      title="Satellite Aerial Imagery"
+                    >
+                      <Globe size={12} /> Satellite
+                    </button>
+                  </div>
+
+                  {/* Catchment Radius Toggle */}
+                  <button
+                    type="button"
+                    className={`map-tool-btn ${showCoverageRadius ? 'active' : ''}`}
+                    onClick={() => setShowCoverageRadius(!showCoverageRadius)}
+                    title="Toggle 1.5km municipal response buffer around selected locality"
+                  >
+                    <Radio size={12} /> 1.5km Catchment: <b>{showCoverageRadius ? 'ON' : 'OFF'}</b>
+                  </button>
+
+                  {/* Recenter Button */}
+                  <button
+                    type="button"
+                    className="map-tool-btn"
+                    onClick={() => {
+                      if (mapInstanceRef.current) {
+                        mapInstanceRef.current.flyTo([19.0800, 72.8700], 11, { duration: 0.8 });
+                      }
+                    }}
+                    title="Reset camera to Greater Mumbai Overview"
+                  >
+                    <Target size={12} /> Recenter
+                  </button>
+
+                  {/* Fullscreen / Split View Toggle */}
+                  <button
+                    type="button"
+                    className={`map-tool-btn ${isMapExpanded ? 'active' : ''}`}
+                    onClick={() => setIsMapExpanded(!isMapExpanded)}
+                    title={isMapExpanded ? 'Exit full-width map' : 'Expand map across full width'}
+                  >
+                    {isMapExpanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                    {isMapExpanded ? 'Split View' : 'Full Width'}
+                  </button>
+                </div>
+              )}
 
               {/* Geographic Approximation Disclosure Badge (Mumbai Default) */}
               {activeDataset.isDefault && (
@@ -1608,19 +1839,104 @@ export default function App() {
               {/* Map Canvas */}
               <div ref={mapContainerRef} className="map-container" />
 
-              {/* Map Legend */}
-              <div className="map-legend">
-                <div><span className="legend-dot" style={{ background: '#FF7868' }}></span>High Priority (≥15)</div>
-                <div><span className="legend-dot" style={{ background: '#F59E0B' }}></span>Medium (7–15)</div>
-                <div><span className="legend-dot" style={{ background: '#20B879' }}></span>Lower-Priority (&lt;7)</div>
-                {activeDataset.isDefault && (
-                  <div><span className="legend-dot" style={{ background: '#168BFF' }}></span>Police Station</div>
-                )}
+              {/* Interactive Map Legend */}
+              <div className="map-interactive-legend">
+                <div className="legend-header">
+                  <span>Civic Priority Tiers</span>
+                  <span className="legend-hint">Click to filter</span>
+                </div>
+                <div className="legend-items">
+                  <button
+                    type="button"
+                    className={`legend-item-chip ${tierFilter === 'High' || quickFilter === 'high' ? 'active-tier' : ''}`}
+                    onClick={() => {
+                      if (tierFilter === 'High' || quickFilter === 'high') { setTierFilter('all'); setQuickFilter('all'); }
+                      else { setTierFilter('High'); setQuickFilter('high'); }
+                    }}
+                    title="Filter to High Priority zones"
+                  >
+                    <span className="legend-dot" style={{ background: '#FF7868' }}></span>
+                    <span>High (≥15)</span>
+                    <span className="legend-count">{metadata.high_risk_count ?? 18}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`legend-item-chip ${tierFilter === 'Medium' || quickFilter === 'med' ? 'active-tier' : ''}`}
+                    onClick={() => {
+                      if (tierFilter === 'Medium' || quickFilter === 'med') { setTierFilter('all'); setQuickFilter('all'); }
+                      else { setTierFilter('Medium'); setQuickFilter('med'); }
+                    }}
+                    title="Filter to Medium Priority zones"
+                  >
+                    <span className="legend-dot" style={{ background: '#F59E0B' }}></span>
+                    <span>Medium (7–15)</span>
+                    <span className="legend-count">{metadata.medium_risk_count ?? 34}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`legend-item-chip ${tierFilter === 'Low' || quickFilter === 'low' ? 'active-tier' : ''}`}
+                    onClick={() => {
+                      if (tierFilter === 'Low' || quickFilter === 'low') { setTierFilter('all'); setQuickFilter('all'); }
+                      else { setTierFilter('Low'); setQuickFilter('low'); }
+                    }}
+                    title="Filter to Lower-Priority zones"
+                  >
+                    <span className="legend-dot" style={{ background: '#20B879' }}></span>
+                    <span>Lower (&lt;7)</span>
+                    <span className="legend-count">{metadata.safe_count ?? 36}</span>
+                  </button>
+
+                  {activeDataset.isDefault && (
+                    <button
+                      type="button"
+                      className={`legend-item-chip ${showPoliceStations ? 'active-stations' : ''}`}
+                      onClick={() => setShowPoliceStations(!showPoliceStations)}
+                      title="Toggle police jurisdiction stations"
+                    >
+                      <span className="legend-dot" style={{ background: '#168BFF' }}></span>
+                      <span>Stations</span>
+                      <span className="legend-count">{activeDataset.police_stations?.length ?? 94}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Map HUD Status Badge */}
+              <div className="map-hud-badge">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="hud-indicator-dot"></span>
+                  <span style={{ fontWeight: 700 }}>MMR GIS Engine</span>
+                  <span style={{ color: 'var(--text-muted)' }}>·</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>
+                    {filteredLocalities.filter(l => l.lat !== null && l.lon !== null).length} Pins
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.67rem', color: 'var(--text-muted)', marginTop: 2, display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span>19.08° N, 72.87° E</span>
+                  <span>•</span>
+                  <span>Layer: <b style={{ textTransform: 'capitalize', color: '#168BFF' }}>{mapMode}</b></span>
+                </div>
               </div>
             </div>
 
             {/* Right Side: Locality Vulnerability Dossier */}
-            <div className="glass-panel dossier-panel">
+            <div className={`glass-panel dossier-panel ${isMapExpanded ? 'floating-dossier' : ''}`}>
+              {isMapExpanded && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 8, borderBottom: '1px solid #E2E8F0', marginBottom: 8 }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#168BFF' }}>
+                    📍 Selected Locality Inspector
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsMapExpanded(false)}
+                    style={{ background: '#F1F5F9', border: 'none', borderRadius: 6, padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    <Minimize2 size={12} /> Split View
+                  </button>
+                </div>
+              )}
               {selectedLocality ? (
                 <>
                   {/* Header & Status */}
