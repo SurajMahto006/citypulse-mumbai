@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CityPulse Mumbai — Demo Recording & Pitch Rehearsal Player</title>
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --border: #E2E8F0;
+      --primary: #1E40AF;
+      --primary-light: #EFF6FF;
+      --text: #0F172A;
+      --muted: #64748B;
+      --accent: #2563EB;
+      --success: #10B981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+    .video-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .video-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .slides-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .slide-viewer {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      margin-top: 16px;
+    }
+    @media (max-width: 900px) {
+      .slide-viewer { grid-template-columns: 1fr; }
+    }
+    .slide-image-container {
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slide-image-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .slide-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .slide-timeline {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .slide-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .slide-script {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      padding: 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.95rem;
+      color: #1E3A8A;
+      margin-bottom: 16px;
+      flex-grow: 1;
+    }
+    .slide-action {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #1D4ED8;
+    }
+    button.secondary {
+      background: #E2E8F0;
+      color: var(--text);
+    }
+    button.secondary:hover {
+      background: #CBD5E1;
+    }
+    .slide-thumbs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 12px 0;
+      margin-top: 20px;
+    }
+    .thumb {
+      flex: 0 0 120px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      overflow: hidden;
+      opacity: 0.6;
+      transition: all 0.2s;
+    }
+    .thumb.active, .thumb:hover {
+      opacity: 1;
+      border-color: var(--accent);
+    }
+    .thumb img {
+      width: 100%;
+      height: 70px;
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-label {
+      font-size: 0.65rem;
+      padding: 4px;
+      text-align: center;
+      background: #F1F5F9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 style="font-size: 1.4rem; font-weight: 800;">CityPulse Mumbai — Demo Recording & Pitch Coach</h1>
+        <p style="color: var(--muted); font-size: 0.9rem;">Automated 5-minute browser demonstration with synchronized narration script.</p>
+      </div>
+      <div>
+        <span class="badge">Walkthrough Duration: ~5:00</span>
+      </div>
+    </header>
+
+    <!-- Animated WebP Video Section -->
+    <div class="video-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h2 style="font-size: 1.1rem; font-weight: 700;">Full Animated Browser Recording (WebP)</h2>
+        <span style="font-size: 0.8rem; color: var(--muted);">File: <code>CityPulse_Mumbai_Hackathon_Demo.webp</code></span>
+      </div>
+      <img src="CityPulse_Mumbai_Hackathon_Demo.webp" alt="CityPulse Mumbai Live Browser Walkthrough Demo" />
+      <p style="font-size: 0.8rem; color: var(--muted); margin-top: 10px;">
+        This animated recording captures the full browser session executing across all tabs and interactive controls.
+      </p>
+    </div>
+
+    <!-- Interactive Keyframe & Script Rehearsal Viewer -->
+    <div class="slides-section">
+      <h2 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;">Step-by-Step Pitch Rehearsal (Synchronized Slides & Narration)</h2>
+      <p style="font-size: 0.85rem; color: var(--muted);">Click Next or select any step below to practice your 5-minute presentation.</p>
+
+      <div class="slide-viewer">
+        <div class="slide-image-container">
+          <img id="main-slide-img" src="screenshots/citypulse_home_1792705101565.png" alt="Slide Preview">
+        </div>
+        <div class="slide-info">
+          <div>
+            <div id="slide-timeline" class="slide-timeline">0:00 – 0:30 (Step 1 of 7)</div>
+            <h3 id="slide-title" class="slide-title">1. Introduction & Header</h3>
+            <div id="slide-action" class="slide-action"><strong>On-Screen Action:</strong> Inspect header, official logo, tagline, active dataset badge.</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; text-transform: uppercase;">Spoken Narration Script:</div>
+            <div id="slide-script" class="slide-script">
+              "Good morning, judges. We are presenting CityPulse Mumbai — an urban safety and city intelligence platform designed to help municipal planners, community leaders, and everyday citizens make evidence-based decisions about neighborhood safety and civic resource allocation."
+            </div>
+          </div>
+          <div class="controls">
+            <button class="secondary" onclick="prevSlide()">◀ Previous</button>
+            <button onclick="nextSlide()">Next Step ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thumbnails -->
+      <div class="slide-thumbs" id="thumbs-container"></div>
+    </div>
+  </div>
+
+  <script>
+    const slides = [
+      {
+        time: "0:00 – 0:45 (Act I: The Human Story)",
+        title: "1. Priya's 11:30 PM Walk at Kurla",
+        action: "Focus on sticky header, official CityPulse logo, vibrant map, and contrast Priya's walk with the 50-crore civic budget.",
+        script: "Judges, imagine it is 11:30 PM at Kurla Railway Station. A 24-year-old nurse named Priya steps off the train. She has an 800-meter walk home. The streetlights are dead, the nearest police station is 2 kilometers away, and there isn't a single police chowki in sight. The next morning, an urban planner sits with a 50-crore civic budget across 538 localities. Here is the tragedy: today, that planner has no way to see Priya's street. In every Indian megacity, safety is handled reactively—after an FIR, after a tragedy. We asked: Why should safety depend on tragedy? We built CityPulse Mumbai to turn reactive policing into proactive municipal intelligence for 12 million citizens.",
+        img: "screenshots/citypulse_home_1792705101565.png"
+      },
+      {
+        time: "0:45 – 1:30 (Act II: Executive Cockpit)",
+        title: "2. Making the Invisible Visible (538 Localities)",
+        action: "Review KPI cards (538 Localities, 137 P1 High Priority, 11.0 Avg Score, 12 Police Hubs) and actionable priority tiers.",
+        script: "At a glance, our Executive Cockpit synthesizes 538 Greater Mumbai localities across the Island City, Western Suburbs, and Eastern Suburbs—powered by administrative records and real OpenStreetMap infrastructure geometries with zero paid APIs. Crucially, we reject fear-mongering labels like 'Crime Hotspots'. Instead, we give city engineers actionable planning tiers: 137 High-Priority zones requiring immediate civic intervention, 202 medium-priority areas, and 199 baseline areas. CityPulse tells the municipal commissioner: out of 538 neighborhoods, exactly 137 require your capital budget this quarter.",
+        img: "screenshots/zone_filtered_map_1792705120578.png"
+      },
+      {
+        time: "1:30 – 2:30 (Act III: Interactive Map & Dossier)",
+        title: "3. Priya's Street & Locality Dossier Explained",
+        action: "Filter by zone, filter by high priority, search Kurla, inspect marker, and open the Locality Dossier with attribution waterfall.",
+        script: "Now let's zoom directly into Priya's neighborhood—Kurla. On our Leaflet map, clicking Kurla opens our on-demand Locality Vulnerability Dossier. Look at what the system reveals: Kurla has a Composite Vulnerability Index of 25.2, backed by a 95% Confidence Interval. Our Factor Attribution Waterfall proves Priya wasn't vulnerable because of bad luck: she faced a 42% lighting deficit, 2.3 km distance to the police station, and acute density strain. CityPulse immediately generates concrete work orders: dispatch dedicated mobile night patrols, fast-track an auxiliary chowki within 600m, and approve high-mast smart LED lighting.",
+        img: "screenshots/high_priority_filtered_1792705143389.png"
+      },
+      {
+        time: "2:30 – 3:30 (Act IV: Scientific Rigor)",
+        title: "4. Three Discoveries & Zero AI Theatre",
+        action: "Switch to Actionable Discoveries tab. Review Discovery 1 (Chowki Deficit), 2 (Built-Environment/UHI), 3 (Digital Inequity). Expand disclosure drawer.",
+        script: "Here is where our team chose scientific integrity over hackathon theatre. Other teams train black-box models and falsely claim 99% crime prediction. Our audit proved vulnerability scores are generated by a closed-form formula (R²=1.0). Predicting a formula with ML is circular tautology. We took the defensible path: benchmarking against an independent per-capita baseline (R²=0.754), and uncovering 3 verified discoveries: high-density wards face 2.0x incident load per chowki; high heat island zones show 1.8x more incidents (rho=0.362, p<0.001); and underserved wards score +5.9 points higher in vulnerability yet log fewer digital complaints.",
+        img: "screenshots/actionable_discoveries_1792705196280.png"
+      },
+      {
+        time: "3:30 – 4:15 (Act V: Scenario Simulator)",
+        title: "5. Municipal Planning Scenario Simulator",
+        action: "Switch to Planning Simulator. Highlight heuristic disclaimer. Add 2 chowkis, boost lighting by 50%, observe score drop from 25.2 to 18.4.",
+        script: "Data is useless if a city cannot act. In our Municipal Planning Scenario Explorer, a budget officer can test hypothetical capital interventions before spending taxpayer funds. Watch what happens when we simulate adding 2 auxiliary chowkis and upgrading smart LED lighting by 50% in Kurla: the projected vulnerability index drops from 25.2 down to 18.4, moving Kurla out of the red alert tier! And we explicitly label this as an arithmetic planning heuristic, not an unverified causal claim, because honesty builds real trust with government administrators.",
+        img: "screenshots/planning_simulator_view_1792705260401.png"
+      },
+      {
+        time: "4:15 – 5:00 (Act VI: City-Agnostic & Grand Finish)",
+        title: "6. Scalability & Story Resolution",
+        action: "Show Dynamic Importer drag-and-drop CSV/JSON/GeoJSON interface, then hold final view on full Mumbai map.",
+        script: "Is CityPulse locked to Mumbai? Absolutely not. Our Dynamic Dataset Importer enables any municipal body—Pune, Delhi, or Bengaluru—to upload custom CSV, JSON, or GeoJSON files with automated schema mapping in 30 seconds. Judges, megacities do not become safer by buying more sirens after a tragedy. They become safe when planners fix the dark street and build the chowki before the night begins. When Priya steps off that train tomorrow night, she shouldn't have to walk in fear. That is the promise of CityPulse Mumbai. Zero paid APIs, reproducible in 2 seconds. Thank you!",
+        img: "screenshots/upload_data_view_1792705300656.png"
+      }
+    ];
+
+    let currentIndex = 0;
+
+    function renderSlide(index) {
+      const s = slides[index];
+      document.getElementById('slide-timeline').innerText = s.time;
+      document.getElementById('slide-title').innerText = s.title;
+      document.getElementById('slide-action').innerHTML = `<strong>On-Screen Action:</strong> ${s.action}`;
+      document.getElementById('slide-script').innerText = `"${s.script}"`;
+      document.getElementById('main-slide-img').src = s.img;
+
+      // Update thumbnails
+      const thumbs = document.querySelectorAll('.thumb');
+      thumbs.forEach((t, i) => {
+        if (i === index) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+    }
+
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % slides.length;
+      renderSlide(currentIndex);
+    }
+
+    function prevSlide() {
+      currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+      renderSlide(currentIndex);
+    }
+
+    // Build thumbnails
+    const container = document.getElementById('thumbs-container');
+    slides.forEach((s, i) => {
+      const thumb = document.createElement('div');
+      thumb.className = `thumb ${i === 0 ? 'active' : ''}`;
+      thumb.onclick = () => { currentIndex = i; renderSlide(i); };
+      thumb.innerHTML = `
+        <img src="${s.img}" alt="${s.title}">
+        <div class="thumb-label">${s.title.split('.')[0]}. ${s.title.split('.')[1]}</div>
+      `;
+      container.appendChild(thumb);
+    });
+  </script>
+</body>
+</html>
